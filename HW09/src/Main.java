@@ -27,7 +27,7 @@ class Main {
    // This demonstrates how you can find the type of an object.
    static String type(Object o) {
       if (o instanceof Any) return "an Any";
-      if (o instanceof Hex) return "an Hex";
+      if (o instanceof Hex) return "a Hex";
       if (o instanceof Int) return "an Int";
       if (o instanceof Flt) return "a Flt";
       return "Err";

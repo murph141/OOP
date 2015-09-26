@@ -10,4 +10,3 @@ interface Comparable {
 	
 	boolean greaterThan(Comparable c);
 }
-
