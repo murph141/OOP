@@ -4,6 +4,9 @@ public class HW11
 {  
     public static void main( String[] args ) {
     	int size = 10000;
+    	
+    	assert(size % 2 == 0);
+    	
         int[][] arr1 = new int[size][size];
         int[][] arr2 = new int[size][size];
         int[][] arrFinal = new int[size][size];
