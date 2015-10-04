@@ -6,3 +6,4 @@ bin/
 \.settings/
 .*
 !.gitignore
+!HW12/*.pdf
