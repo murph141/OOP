@@ -1,5 +1,9 @@
 *.pdf
 *.class
+*.o
+*.d
+*.mk
+makefile
 bin/
 \.classpath/
 \.project/
