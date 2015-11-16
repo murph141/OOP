@@ -18,7 +18,6 @@ class Set
 
 	public:
 		Set(int);
-		~Set();
 		int getCopyCount();
 		int * members;
 		int copied;
@@ -110,7 +109,5 @@ ostream& operator<<(ostream& os, const Set& X)
 
 	return(os);
 }
-
-Set::~Set(){}
 
 #endif /* SET_H_ */
