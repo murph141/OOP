@@ -57,7 +57,7 @@ Set operator-(Set X, int x)
 
 Set operator&(Set X, Set Y)
 {
-	Set Z = Set(0);
+	Set Z = Set((X.size - 1) * 32);
 
 	for(int a = 0; a < 2048; a++)
 	{
