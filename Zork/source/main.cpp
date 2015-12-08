@@ -2,7 +2,13 @@
 
 int main(int argc, char * argv[])
 {
-  Map newMap("inputs/sample.xml");
+  if(argc != 2)
+  {
+    cout << "Usage: " << argv[0] << " <input file>" << endl;
+    return(-1);
+  }
+
+  Map newMap(argv[1]);
 
   cout << newMap;
 

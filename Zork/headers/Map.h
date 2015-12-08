@@ -19,9 +19,10 @@ string convertToString(xml_node<> *, int);
 
 class Item
 {
-  // Look in to "turn on" and "trigger"
   public:
     string name, status, description, writing;
+    //vector<Trigger> triggers;
+    // Turn on
     void setName(string);
     void setStatus(string);
     void setDescription(string);
