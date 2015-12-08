@@ -62,13 +62,82 @@ void Item::setWriting(string a)
 
 // End Item Class
 
+// Begin Class Condition
+
+class Condition
+{
+  public:
+    void setObject(string);
+    void setStatus(string);
+    void setHas(string);
+    void setOwner(string);
+    friend ostream& operator<<(ostream&, const Condition&);
+    string object, status, has, owner;
+
+};
+
+ostream& operator<<(ostream& os, const Condition& newCondition)
+{
+  os << "Object: " << newCondition.object << endl;
+  os << "Status: " << newCondition.status << endl;
+  os << "Has: " << newCondition.has << endl;
+  os << "Owner: " << newCondition.owner << endl;
+
+  return(os);
+}
+
+void Condition::setObject(string a)
+{
+  object = a;
+}
+
+void Condition::setStatus(string a)
+{
+  status = a;
+}
+
+void Condition::setHas(string a)
+{
+  has = a;
+}
+
+void Condition::setOwner(string a)
+{
+  owner = a;
+}
+
 // Begin Trigger Class
 
 class Trigger
 {
   public:
-    //
+    void setType(string);
+    void setCommand(string);
+    void setPrint(string);
+    friend ostream& operator<<(ostream&, const Trigger&);
+
+    string type, command, print;
+    Condition condition;
+    vector<string> actions;
 };
+
+ostream& operator<<(ostream& os, const Trigger& newTrigger)
+{
+  os << "Type: " << newTrigger.type << endl;
+  os << "Command: " << newTrigger.command << endl;
+  os << "Print: " << newTrigger.print << endl;
+  os << "Actions: " << endl;
+
+  for(int i = 0; i < newTrigger.actions.size(); i++)
+  {
+    os << newTrigger.actions[i] << endl;
+  }
+
+  os << "Condition: " << newTrigger.condition;
+
+  return(os);
+}
+
 
 // End Trigger Class
 
@@ -78,13 +147,15 @@ class Container
 {
   public:
     string name, status, description;
-    vector<Item> acceptedItems;
-    vector<Item> items;
+    vector<string> acceptedItems;
+    vector<string> items;
     vector<Trigger> triggers;
 
     void setName(string);
     void setStatus(string);
     void setDescription(string);
+    void setAccept(string);
+    void setItem(string);
     friend ostream& operator<<(ostream&, const Container&);
 };
 
@@ -93,6 +164,19 @@ ostream& operator<<(ostream& os, const Container& newContainer)
   os << "Name: " << newContainer.name << endl;
   os << "Status: " << newContainer.status << endl;
   os << "Description: " << newContainer.description << endl;
+  os << "Accepts: " << endl;
+
+  for(int i = 0; i < newContainer.acceptedItems.size(); i++)
+  {
+    os << newContainer.acceptedItems[i] << endl;
+  }
+
+  os << "Items: " << endl;
+
+  for(int i = 0; i < newContainer.items.size(); i++)
+  {
+    os << newContainer.items[i] << endl;
+  }
 
   return(os);
 }
@@ -112,7 +196,41 @@ void Container::setDescription(string a)
   description = a;
 }
 
+void Container::setAccept(string a)
+{
+  acceptedItems.push_back(a);
+}
+
+void Container::setItem(string a)
+{
+  items.push_back(a);
+}
+
 // End Container Class
+
+// Begin Attack Class
+
+class Attack
+{
+  public:
+    void setActions(string);
+    void setPrint(string);
+
+    vector<string> actions;
+    string print;
+};
+
+void Attack::setActions(string a)
+{
+  actions.push_back(a);
+}
+
+void Attack::setPrint(string a)
+{
+  print = a;
+}
+
+// End Attack Class
 
 // Begin Creature Class
 
@@ -122,11 +240,13 @@ class Creature
     void setName(string);
     void setStatus(string);
     void setDescription(string);
+    void setVulnerability(string);
     friend ostream& operator<<(ostream&, const Creature&);
 
     string name, status, description;
-    // Vulnerability, attack
-    // vector<Trigger> triggers;
+    vector<string> vulnerabilities;
+    vector<Trigger> triggers;
+    Attack * attack;
 };
 
 ostream& operator<<(ostream& os, const Creature& newCreature)
@@ -134,6 +254,12 @@ ostream& operator<<(ostream& os, const Creature& newCreature)
   os << "Name: " << newCreature.name << endl;
   os << "Status: " << newCreature.status << endl;
   os << "Description: " << newCreature.description << endl;
+  os << "Vulnerabilities: " << endl;
+
+  for(int i = 0; i < newCreature.vulnerabilities.size(); i++)
+  {
+    os << newCreature.vulnerabilities[i] << endl;
+  }
 
   return(os);
 }
@@ -151,6 +277,11 @@ void Creature::setStatus(string a)
 void Creature::setDescription(string a)
 {
   description = a;
+}
+
+void Creature::setVulnerability(string a)
+{
+  vulnerabilities.push_back(a);
 }
 
 // End Creature Class
@@ -417,6 +548,7 @@ Container * Map::containerParse(xml_node<> * tag)
     }
     else if(!nodeName.compare("accept"))
     {
+      newContainer->setAccept(nodeValue);
     }
     else if(!nodeName.compare("item"))
     {
@@ -454,6 +586,7 @@ Creature * Map::creatureParse(xml_node<> * tag)
     }
     else if(!nodeName.compare("vulnerability"))
     {
+      newCreature->setVulnerability(nodeValue);
     }
     else if(!nodeName.compare("attack"))
     {
