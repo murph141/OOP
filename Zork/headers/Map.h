@@ -112,7 +112,38 @@ void Container::setDescription(string a)
 
 class Creature
 {
+  public:
+    void setName(string);
+    void setStatus(string);
+    void setDescription(string);
+    friend ostream& operator<<(ostream&, const Creature&);
+
+    string name, status, description;
+    // Vulnerability, attack
+    // vector<Trigger> triggers;
 };
+
+ostream& operator<<(ostream& os, const Creature& newCreature)
+{
+  os << "Name: " << newCreature.name << endl << "Status: " << newCreature.status << endl << "Description: " << newCreature.description << endl;
+
+  return(os);
+}
+
+void Creature::setName(string a)
+{
+  name = a;
+}
+
+void Creature::setStatus(string a)
+{
+  status = a;
+}
+
+void Creature::setDescription(string a)
+{
+  description = a;
+}
 
 // End Creature Class
 
@@ -183,7 +214,7 @@ class Map
 
     Item * itemParse(xml_node<> *);
     Room * roomParse(xml_node<> *);
-    //Creature * creatureParse(xml_node<> *);
+    Creature * creatureParse(xml_node<> *);
     Container * containerParse(xml_node<> *);
 };
 
@@ -222,7 +253,7 @@ Map::Map(string inputFile)
     }
     else if(!s.compare("creature"))
     {
-      //creatureParse
+      Creature * newCreature = creatureParse(tag);
     }
     else
     {
@@ -267,7 +298,8 @@ Item * Map::itemParse(xml_node<> * tag)
     }
   }
 
-  //cout << *newItem;
+  cout << *newItem;
+  cout << endl;
 
   return(newItem);
 }
@@ -322,6 +354,7 @@ Room * Map::roomParse(xml_node<> * tag)
   return(newRoom);
 }
 
+
 Container * Map::containerParse(xml_node<> * tag)
 {
   Container * newContainer= new Container();
@@ -362,6 +395,43 @@ Container * Map::containerParse(xml_node<> * tag)
 }
 
 
+Creature * Map::creatureParse(xml_node<> * tag)
+{
+  Creature * newCreature= new Creature();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("name"))
+    {
+      newCreature->setName(nodeValue);
+    }
+    else if(!nodeName.compare("status"))
+    {
+      newCreature->setStatus(nodeValue);
+    }
+    else if(!nodeName.compare("description"))
+    {
+      newCreature->setDescription(nodeValue);
+    }
+    else if(!nodeName.compare("vulnerability"))
+    {
+    }
+    else if(!nodeName.compare("attack"))
+    {
+    }
+    else if(!nodeName.compare("trigger"))
+    {
+    }
+  }
+
+  cout << *newCreature;
+  cout << endl;
+
+  return(newCreature);
+}
 
 // x = 0 -- name
 //   = 1 -- value
