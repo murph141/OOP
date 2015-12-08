@@ -10,5 +10,7 @@ int main(int argc, char * argv[])
 
   Map newMap(argv[1]);
 
+  cout << newMap;
+
   return(0);
 }

@@ -114,10 +114,11 @@ class Trigger
     void setType(string);
     void setCommand(string);
     void setPrint(string);
+    void setAction(string);
     friend ostream& operator<<(ostream&, const Trigger&);
 
     string type, command, print;
-    Condition condition;
+    Condition * condition;
     vector<string> actions;
 };
 
@@ -133,11 +134,30 @@ ostream& operator<<(ostream& os, const Trigger& newTrigger)
     os << newTrigger.actions[i] << endl;
   }
 
-  os << "Condition: " << newTrigger.condition;
+  os << "Condition: " << endl << *newTrigger.condition << endl;
 
   return(os);
 }
 
+void Trigger::setType(string a)
+{
+  type = a;
+}
+
+void Trigger::setCommand(string a)
+{
+  command = a;
+}
+
+void Trigger::setPrint(string a)
+{
+  print = a;
+}
+
+void Trigger::setAction(string a)
+{
+  actions.push_back(a);
+}
 
 // End Trigger Class
 
@@ -149,7 +169,7 @@ class Container
     string name, status, description;
     vector<string> acceptedItems;
     vector<string> items;
-    vector<Trigger> triggers;
+    vector<Trigger *> triggers;
 
     void setName(string);
     void setStatus(string);
@@ -176,6 +196,13 @@ ostream& operator<<(ostream& os, const Container& newContainer)
   for(int i = 0; i < newContainer.items.size(); i++)
   {
     os << newContainer.items[i] << endl;
+  }
+
+  os << "Triggers: " << endl;
+
+  for(int i = 0; i < newContainer.triggers.size(); i++)
+  {
+    os << *newContainer.triggers[i] << endl;
   }
 
   return(os);
@@ -215,10 +242,30 @@ class Attack
   public:
     void setActions(string);
     void setPrint(string);
+    friend ostream& operator<<(ostream&, const Attack&);
 
+    Condition * condition;
     vector<string> actions;
     string print;
 };
+
+ostream& operator<<(ostream& os, const Attack& newAttack)
+{
+  os << "Print: " << newAttack.print << endl;
+
+  os << endl << "Actions: " << endl;
+
+  for(int i = 0; i < newAttack.actions.size(); i++)
+  {
+    os << newAttack.actions[i] << endl;
+  }
+
+  os << endl << "Condition: " << endl;
+
+  os << *newAttack.condition;
+
+  return(os);
+}
 
 void Attack::setActions(string a)
 {
@@ -245,7 +292,7 @@ class Creature
 
     string name, status, description;
     vector<string> vulnerabilities;
-    vector<Trigger> triggers;
+    vector<Trigger *> triggers;
     Attack * attack;
 };
 
@@ -260,6 +307,15 @@ ostream& operator<<(ostream& os, const Creature& newCreature)
   {
     os << newCreature.vulnerabilities[i] << endl;
   }
+
+  os << "Triggers: " << endl;
+
+  for(int i = 0; i < newCreature.triggers.size(); i++)
+  {
+    os << *newCreature.triggers[i] << endl;
+  }
+
+  os << "Attack: " << *newCreature.attack;
 
   return(os);
 }
@@ -297,12 +353,15 @@ class Room
     void setStatus(string);
     void setType(string);
     void setDescription(string);
+    void setItem(string);
+    void setCreature(string);
+    void setContainer(string);
 
     vector<char> direction;
-    vector<Container> containers;
-    vector<Item> items;
-    vector<Creature> creatures;
-    //vector<Trigger> triggers;
+    vector<string> containers;
+    vector<string> items;
+    vector<string> creatures;
+    vector<Trigger *> triggers;
     friend ostream& operator<<(ostream&, const Room&);
 };
 
@@ -317,6 +376,36 @@ ostream& operator<<(ostream& os, const Room& newRoom)
   os << "Status: " << newRoom.status << endl;
   os << "Type: " << newRoom.type << endl;
   os << "Description: " << newRoom.description << endl;
+
+  // Print directions
+  
+  os << "Containers: " << endl;
+
+  for(int i = 0; i < newRoom.containers.size(); i++)
+  {
+    os << newRoom.containers[i] << endl;
+  }
+
+  os << "Items: " << endl;
+
+  for(int i = 0; i < newRoom.items.size(); i++)
+  {
+    os << newRoom.items[i] << endl;
+  }
+
+  os << "Creatures: " << endl;
+
+  for(int i = 0; i < newRoom.creatures.size(); i++)
+  {
+    os << newRoom.creatures[i] << endl;
+  }
+
+  os << "Triggers: " << endl;
+
+  for(int i = 0; i < newRoom.triggers.size(); i++)
+  {
+    os << *newRoom.triggers[i] << endl;
+  }
 
   return(os);
 }
@@ -341,6 +430,21 @@ void Room::setDescription(string a)
   description = a;
 }
 
+void Room::setItem(string a)
+{
+  items.push_back(a);
+}
+
+void Room::setCreature(string a)
+{
+  creatures.push_back(a);
+}
+
+void Room::setContainer(string a)
+{
+  containers.push_back(a);
+}
+
 // End Room Class
 
 class Map
@@ -359,6 +463,9 @@ class Map
     Room * roomParse(xml_node<> *);
     Creature * creatureParse(xml_node<> *);
     Container * containerParse(xml_node<> *);
+    Attack * attackParse(xml_node<> *);
+    Condition * conditionParse(xml_node<> *);
+    Trigger * triggerParse(xml_node<> *);
 };
 
 ostream& operator<<(ostream& os, const Map& newMap)
@@ -390,6 +497,8 @@ ostream& operator<<(ostream& os, const Map& newMap)
   {
     os << *newMap.containers[i] << endl;
   }
+
+  os << endl;
 
   return(os);
 }
@@ -506,18 +615,24 @@ Room * Map::roomParse(xml_node<> * tag)
     }
     else if(!nodeName.compare("border"))
     {
+      // TODO
     }
     else if(!nodeName.compare("container"))
     {
+      newRoom->setContainer(nodeValue);
     }
     else if(!nodeName.compare("item"))
     {
+      newRoom->setItem(nodeValue);
     }
     else if(!nodeName.compare("creature"))
     {
+      newRoom->setCreature(nodeValue);
     }
     else if(!nodeName.compare("trigger"))
     {
+      Trigger * newTrigger = triggerParse(temp);
+      newRoom->triggers.push_back(newTrigger);
     }
   }
 
@@ -527,7 +642,7 @@ Room * Map::roomParse(xml_node<> * tag)
 
 Container * Map::containerParse(xml_node<> * tag)
 {
-  Container * newContainer= new Container();
+  Container * newContainer = new Container();
 
   for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
   {
@@ -552,10 +667,12 @@ Container * Map::containerParse(xml_node<> * tag)
     }
     else if(!nodeName.compare("item"))
     {
-      //Item * newItem = itemParse(temp);
+      newContainer->setItem(nodeValue);
     }
     else if(!nodeName.compare("trigger"))
     {
+      Trigger * newTrigger = triggerParse(temp);
+      newContainer->triggers.push_back(newTrigger);
     }
   }
 
@@ -565,7 +682,7 @@ Container * Map::containerParse(xml_node<> * tag)
 
 Creature * Map::creatureParse(xml_node<> * tag)
 {
-  Creature * newCreature= new Creature();
+  Creature * newCreature = new Creature();
 
   for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
   {
@@ -590,14 +707,109 @@ Creature * Map::creatureParse(xml_node<> * tag)
     }
     else if(!nodeName.compare("attack"))
     {
+      newCreature->attack = attackParse(temp);
     }
     else if(!nodeName.compare("trigger"))
     {
+      Trigger * newTrigger = triggerParse(temp);
+      newCreature->triggers.push_back(newTrigger);
     }
   }
 
   return(newCreature);
 }
+
+Attack * Map::attackParse(xml_node<> * tag)
+{
+  Attack * newAttack = new Attack();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("print"))
+    {
+      newAttack->setPrint(nodeValue);
+    }
+    else if(!nodeName.compare("action"))
+    {
+      newAttack->setActions(nodeValue);
+    }
+    else if(!nodeName.compare("condition"))
+    {
+      newAttack->condition = conditionParse(temp);
+    }
+  }
+
+  return(newAttack);
+}
+
+Condition * Map::conditionParse(xml_node<> * tag)
+{
+  Condition * newCondition = new Condition();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("object"))
+    {
+      newCondition->setObject(nodeValue);
+    }
+    else if(!nodeName.compare("status"))
+    {
+      newCondition->setStatus(nodeValue);
+    }
+    else if(!nodeName.compare("has"))
+    {
+      newCondition->setHas(nodeValue);
+    }
+    else if(!nodeName.compare("owner"))
+    {
+      newCondition->setOwner(nodeValue);
+    }
+  }
+
+  return(newCondition);
+}
+
+Trigger * Map::triggerParse(xml_node<> * tag)
+{
+  Trigger * newTrigger = new Trigger();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("type"))
+    {
+      newTrigger->setType(nodeValue);
+    }
+    else if(!nodeName.compare("command"))
+    {
+      newTrigger->setCommand(nodeValue);
+    }
+    else if(!nodeName.compare("condition"))
+    {
+      Condition * newCondition = conditionParse(temp);
+      newTrigger->condition = newCondition;
+    }
+    else if(!nodeName.compare("action"))
+    {
+      newTrigger->setAction(nodeValue);
+    }
+    else if(!nodeName.compare("print"))
+    {
+      newTrigger->setPrint(nodeValue);
+    }
+  }
+
+  return(newTrigger);
+}
+
 
 // x = 0 -- name
 //   = 1 -- value
