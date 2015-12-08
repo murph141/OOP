@@ -20,10 +20,8 @@ string convertToString(xml_node<> *, int);
 class Item
 {
   // Look in to "turn on" and "trigger"
-  private:
-    string name, status, description, writing;
-  
   public:
+    string name, status, description, writing;
     void setName(string);
     void setStatus(string);
     void setDescription(string);
@@ -60,19 +58,57 @@ void Item::setWriting(string a)
 
 // End Item Class
 
+// Begin Trigger Class
+
+class Trigger
+{
+  public:
+    //
+};
+
+// End Trigger Class
+
 // Begin Container Class
 
 class Container
 {
-  private:
-    string name, status, description;
-    //vector<Accept> acceptedItems;
-    vector<Item> items;
-    //vector<Trigger> triggers;
-
   public:
+    string name, status, description;
+    vector<Item> acceptedItems;
+    vector<Item> items;
+    vector<Trigger> triggers;
+
+    void setName(string);
+    void setStatus(string);
+    void setDescription(string);
+    friend ostream& operator<<(ostream&, const Container&);
 };
 
+ostream& operator<<(ostream& os, const Container& newContainer)
+{
+  os << "Name: " << newContainer.name << endl << "Status: " << newContainer.status << endl << "Description: " << newContainer.description << endl;
+
+  return(os);
+}
+
+void Container::setName(string a)
+{
+  name = a;
+}
+
+void Container::setStatus(string a)
+{
+  status = a;
+}
+
+void Container::setDescription(string a)
+{
+  description = a;
+}
+
+// End Container Class
+
+// Begin Creature Class
 
 class Creature
 {
@@ -147,9 +183,9 @@ class Map
 
     Item * itemParse(xml_node<> *);
     Room * roomParse(xml_node<> *);
+    //Creature * creatureParse(xml_node<> *);
+    Container * containerParse(xml_node<> *);
 };
-
-
 
 Map::Map(string inputFile)
 {
@@ -182,7 +218,7 @@ Map::Map(string inputFile)
     }
     else if(!s.compare("container"))
     {
-      //containerParse
+      Container * newContainer = containerParse(tag);
     }
     else if(!s.compare("creature"))
     {
@@ -283,8 +319,48 @@ Room * Map::roomParse(xml_node<> * tag)
   cout << *newRoom;
   cout << endl;
 
-  return(NULL);
+  return(newRoom);
 }
+
+Container * Map::containerParse(xml_node<> * tag)
+{
+  Container * newContainer= new Container();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("name"))
+    {
+      newContainer->setName(nodeValue);
+    }
+    else if(!nodeName.compare("status"))
+    {
+      newContainer->setStatus(nodeValue);
+    }
+    else if(!nodeName.compare("description"))
+    {
+      newContainer->setDescription(nodeValue);
+    }
+    else if(!nodeName.compare("accept"))
+    {
+    }
+    else if(!nodeName.compare("item"))
+    {
+      //Item * newItem = itemParse(temp);
+    }
+    else if(!nodeName.compare("trigger"))
+    {
+    }
+  }
+
+  cout << *newContainer;
+  cout << endl;
+
+  return(newContainer);
+}
+
 
 
 // x = 0 -- name
