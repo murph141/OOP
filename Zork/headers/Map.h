@@ -20,25 +20,16 @@ string convertToString(xml_node<> *, int);
 class Item
 {
   // Look in to "turn on" and "trigger"
+  private:
+    string name, status, description, writing;
   
   public:
-    Item();
-    string name, status, description, writing;
     void setName(string);
     void setStatus(string);
     void setDescription(string);
     void setWriting(string);
-
     friend ostream& operator<<(ostream&, const Item&);
 };
-
-Item::Item()
-{
-  name = "";
-  status = "";
-  description = "";
-  writing = "";
-}
 
 ostream& operator<<(ostream& os, const Item& item)
 {
@@ -87,33 +78,75 @@ class Creature
 {
 };
 
+// End Creature Class
+
+// Begin Room Class
+
 class Room 
 {
-  private:
-    // Add stuff
+  public:
+    Room();
     string name, status, type, description;
+    void setName(string);
+    void setStatus(string);
+    void setType(string);
+    void setDescription(string);
+
     vector<char> direction;
     vector<Container> containers;
     vector<Item> items;
     vector<Creature> creatures;
     //vector<Trigger> triggers;
-    
-
-  public:
-    // Add stuff
+    friend ostream& operator<<(ostream&, const Room&);
 };
 
+Room::Room()
+{
+  setType("regular");
+}
+
+ostream& operator<<(ostream& os, const Room& newRoom)
+{
+  os << "Name: " << newRoom.name << endl << "Status: " << newRoom.status << endl << "Type: " << newRoom.type << endl << "Description: " << newRoom.description << endl;
+
+  return(os);
+}
+
+void Room::setName(string a)
+{
+  name = a;
+}
+
+void Room::setStatus(string a)
+{
+  status = a;
+}
+
+void Room::setType(string a)
+{
+  type = a;
+}
+
+void Room::setDescription(string a)
+{
+  description = a;
+}
+
+// End Room Class
 
 class Map
 {
-  private:
-    vector<Room> rooms;
 
   public:
     Map(string);
-    void itemParse(xml_node<> *);
 
-    void addRoom();
+    vector<Room> rooms;
+    vector<Item> items;
+    vector<Creature> creatures;
+    vector<Container> containers;
+
+    Item * itemParse(xml_node<> *);
+    Room * roomParse(xml_node<> *);
 };
 
 
@@ -141,11 +174,11 @@ Map::Map(string inputFile)
     // Detrmine which type it is
     if(!s.compare("room"))
     {
-      //roomParse()
+      Room * newRoom = roomParse(tag);
     }
     else if(!s.compare("item"))
     {
-      itemParse(tag);
+      Item * newItem = itemParse(tag);
     }
     else if(!s.compare("container"))
     {
@@ -163,9 +196,9 @@ Map::Map(string inputFile)
 }
 
 
-void Map::itemParse(xml_node<> * tag)
+Item * Map::itemParse(xml_node<> * tag)
 {
-  Item newItem;
+  Item * newItem = new Item();
 
   for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
   {
@@ -174,19 +207,19 @@ void Map::itemParse(xml_node<> * tag)
 
     if(!nodeName.compare("name"))
     {
-      newItem.setName(nodeValue);
+      newItem->setName(nodeValue);
     }
     else if(!nodeName.compare("status"))
     {
-      newItem.setStatus(nodeValue);
+      newItem->setStatus(nodeValue);
     }
     else if(!nodeName.compare("description"))
     {
-      newItem.setDescription(nodeValue);
+      newItem->setDescription(nodeValue);
     }
     else if(!nodeName.compare("writing"))
     {
-      newItem.setWriting(nodeValue);
+      newItem->setWriting(nodeValue);
     }
     else if(!nodeName.compare("turn on"))
     {
@@ -198,8 +231,59 @@ void Map::itemParse(xml_node<> * tag)
     }
   }
 
-  cout << newItem;
+  //cout << *newItem;
+
+  return(newItem);
+}
+
+Room * Map::roomParse(xml_node<> * tag)
+{
+  Room * newRoom = new Room();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("name"))
+    {
+      newRoom->setName(nodeValue);
+    }
+    else if(!nodeName.compare("status"))
+    {
+      newRoom->setStatus(nodeValue);
+    }
+    else if(!nodeName.compare("type"))
+    {
+      newRoom->setType(nodeValue);
+    }
+    else if(!nodeName.compare("description"))
+    {
+      newRoom->setDescription(nodeValue);
+    }
+    else if(!nodeName.compare("border"))
+    {
+    }
+    else if(!nodeName.compare("container"))
+    {
+    }
+    else if(!nodeName.compare("item"))
+    {
+    }
+    else if(!nodeName.compare("creature"))
+    {
+    }
+    else if(!nodeName.compare("trigger"))
+    {
+    }
+
+    //cout << nodeName << " - " << nodeValue << endl;
+  }
+
+  cout << *newRoom;
   cout << endl;
+
+  return(NULL);
 }
 
 
