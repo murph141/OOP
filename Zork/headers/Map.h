@@ -594,31 +594,32 @@ Map::Map(string inputFile)
 
   node = doc.first_node();
 
-  // Check if (*node).name() is "map"
+  // Check for correct XML formatting
+  if(convertToString(node, 0).compare("map"))
+  {
+    cout << "Error, XML formatting is incorrect" << endl;
+  }
 
   for(xml_node<> * tag = node->first_node(); tag; tag = tag->next_sibling())
   {
-    ostringstream ss;
-    ss << (*tag).name();
-    string s = ss.str();
+    string nodeName = convertToString(tag, 0);
     
-    // Detrmine which type it is
-    if(!s.compare("room"))
+    if(!nodeName.compare("room"))
     {
       Room * newRoom = roomParse(tag);
       rooms.push_back(newRoom);
     }
-    else if(!s.compare("item"))
+    else if(!nodeName.compare("item"))
     {
       Item * newItem = itemParse(tag);
       items.push_back(newItem);
     }
-    else if(!s.compare("container"))
+    else if(!nodeName.compare("container"))
     {
       Container * newContainer = containerParse(tag);
       containers.push_back(newContainer);
     }
-    else if(!s.compare("creature"))
+    else if(!nodeName.compare("creature"))
     {
       Creature * newCreature = creatureParse(tag);
       creatures.push_back(newCreature);
@@ -956,6 +957,5 @@ string convertToString(xml_node<> * t, int x)
 
   return(ss.str());
 }
-
 
 #endif // __MAP_H_
