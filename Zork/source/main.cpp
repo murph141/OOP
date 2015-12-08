@@ -2,7 +2,9 @@
 
 int main(int argc, char * argv[])
 {
-  Map m("inputs/sample.xml");
+  Map newMap("inputs/sample.xml");
+
+  cout << newMap;
 
   return(0);
 }

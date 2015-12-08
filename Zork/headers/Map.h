@@ -31,7 +31,10 @@ class Item
 
 ostream& operator<<(ostream& os, const Item& item)
 {
-  os << "Name: " << item.name << endl << "Status: " << item.status << endl << "Description: " << item.description << endl << "Writing: " << item.writing << endl;
+  os << "Name: " << item.name << endl;
+  os << "Status: " << item.status << endl;
+  os << "Description: " << item.description << endl;
+  os << "Writing: " << item.writing << endl;
 
   return(os);
 }
@@ -86,7 +89,9 @@ class Container
 
 ostream& operator<<(ostream& os, const Container& newContainer)
 {
-  os << "Name: " << newContainer.name << endl << "Status: " << newContainer.status << endl << "Description: " << newContainer.description << endl;
+  os << "Name: " << newContainer.name << endl;
+  os << "Status: " << newContainer.status << endl;
+  os << "Description: " << newContainer.description << endl;
 
   return(os);
 }
@@ -125,7 +130,9 @@ class Creature
 
 ostream& operator<<(ostream& os, const Creature& newCreature)
 {
-  os << "Name: " << newCreature.name << endl << "Status: " << newCreature.status << endl << "Description: " << newCreature.description << endl;
+  os << "Name: " << newCreature.name << endl;
+  os << "Status: " << newCreature.status << endl;
+  os << "Description: " << newCreature.description << endl;
 
   return(os);
 }
@@ -174,7 +181,10 @@ Room::Room()
 
 ostream& operator<<(ostream& os, const Room& newRoom)
 {
-  os << "Name: " << newRoom.name << endl << "Status: " << newRoom.status << endl << "Type: " << newRoom.type << endl << "Description: " << newRoom.description << endl;
+  os << "Name: " << newRoom.name << endl;
+  os << "Status: " << newRoom.status << endl;
+  os << "Type: " << newRoom.type << endl;
+  os << "Description: " << newRoom.description << endl;
 
   return(os);
 }
@@ -207,16 +217,50 @@ class Map
   public:
     Map(string);
 
-    vector<Room> rooms;
-    vector<Item> items;
-    vector<Creature> creatures;
-    vector<Container> containers;
+    vector<Room *> rooms;
+    vector<Item *> items;
+    vector<Creature *> creatures;
+    vector<Container *> containers;
 
+    friend ostream& operator<<(ostream&, const Map&);
     Item * itemParse(xml_node<> *);
     Room * roomParse(xml_node<> *);
     Creature * creatureParse(xml_node<> *);
     Container * containerParse(xml_node<> *);
 };
+
+ostream& operator<<(ostream& os, const Map& newMap)
+{
+  os << "--- Rooms ---" << endl << endl;
+
+  for(int i = 0; i < newMap.rooms.size(); i++)
+  {
+    os << *newMap.rooms[i] << endl;
+  }
+
+  os << "--- Items ---" << endl;
+
+  for(int i = 0; i < newMap.items.size(); i++)
+  {
+    os << *newMap.items[i] << endl;
+  }
+
+  os << "--- Creatures ---" << endl;
+
+  for(int i = 0; i < newMap.creatures.size(); i++)
+  {
+    os << *newMap.creatures[i] << endl;
+  }
+
+  os << "--- Containers ---" << endl;
+
+  for(int i = 0; i < newMap.containers.size(); i++)
+  {
+    os << *newMap.containers[i] << endl;
+  }
+
+  return(os);
+}
 
 Map::Map(string inputFile)
 {
@@ -227,8 +271,6 @@ Map::Map(string inputFile)
   doc.parse<0>(xmlFile.data());
 
   node = doc.first_node();
-
-  //cout << (*node).name() << endl;
 
   // Check if (*node).name() is "map"
 
@@ -242,18 +284,22 @@ Map::Map(string inputFile)
     if(!s.compare("room"))
     {
       Room * newRoom = roomParse(tag);
+      rooms.push_back(newRoom);
     }
     else if(!s.compare("item"))
     {
       Item * newItem = itemParse(tag);
+      items.push_back(newItem);
     }
     else if(!s.compare("container"))
     {
       Container * newContainer = containerParse(tag);
+      containers.push_back(newContainer);
     }
     else if(!s.compare("creature"))
     {
       Creature * newCreature = creatureParse(tag);
+      creatures.push_back(newCreature);
     }
     else
     {
@@ -298,9 +344,6 @@ Item * Map::itemParse(xml_node<> * tag)
     }
   }
 
-  cout << *newItem;
-  cout << endl;
-
   return(newItem);
 }
 
@@ -344,12 +387,7 @@ Room * Map::roomParse(xml_node<> * tag)
     else if(!nodeName.compare("trigger"))
     {
     }
-
-    //cout << nodeName << " - " << nodeValue << endl;
   }
-
-  cout << *newRoom;
-  cout << endl;
 
   return(newRoom);
 }
@@ -388,9 +426,6 @@ Container * Map::containerParse(xml_node<> * tag)
     }
   }
 
-  cout << *newContainer;
-  cout << endl;
-
   return(newContainer);
 }
 
@@ -426,9 +461,6 @@ Creature * Map::creatureParse(xml_node<> * tag)
     {
     }
   }
-
-  cout << *newCreature;
-  cout << endl;
 
   return(newCreature);
 }
