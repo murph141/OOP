@@ -15,54 +15,7 @@ using namespace rapidxml;
 
 string convertToString(xml_node<> *, int);
 
-// Start Item Class
-
-class Item
-{
-  public:
-    string name, status, description, writing;
-    //vector<Trigger> triggers;
-    // Turn on
-    void setName(string);
-    void setStatus(string);
-    void setDescription(string);
-    void setWriting(string);
-    friend ostream& operator<<(ostream&, const Item&);
-};
-
-ostream& operator<<(ostream& os, const Item& item)
-{
-  os << "Name: " << item.name << endl;
-  os << "Status: " << item.status << endl;
-  os << "Description: " << item.description << endl;
-  os << "Writing: " << item.writing << endl;
-
-  return(os);
-}
-
-void Item::setName(string a)
-{
-  name = a;
-}
-
-void Item::setStatus(string a)
-{
-  status = a;
-}
-
-void Item::setDescription(string a)
-{
-  description = a;
-}
-
-void Item::setWriting(string a)
-{
-  writing = a;
-}
-
-// End Item Class
-
-// Begin Class Condition
+// Begin Condition Class
 
 class Condition
 {
@@ -105,6 +58,8 @@ void Condition::setOwner(string a)
 {
   owner = a;
 }
+
+// End Condition Class
 
 // Begin Trigger Class
 
@@ -160,6 +115,60 @@ void Trigger::setAction(string a)
 }
 
 // End Trigger Class
+
+// Begin Item Class
+
+class Item
+{
+  public:
+    string name, status, description, writing;
+    vector<Trigger *> triggers;
+    // Turn on
+    void setName(string);
+    void setStatus(string);
+    void setDescription(string);
+    void setWriting(string);
+    friend ostream& operator<<(ostream&, const Item&);
+};
+
+ostream& operator<<(ostream& os, const Item& newItem)
+{
+  os << "Name: " << newItem.name << endl;
+  os << "Status: " << newItem.status << endl;
+  os << "Description: " << newItem.description << endl;
+  os << "Writing: " << newItem.writing << endl;
+
+  os << "Triggers: " << endl;
+
+  for(int i = 0; i < newItem.triggers.size(); i++)
+  {
+    os << newItem.triggers[i] << endl;
+  }
+
+  return(os);
+}
+
+void Item::setName(string a)
+{
+  name = a;
+}
+
+void Item::setStatus(string a)
+{
+  status = a;
+}
+
+void Item::setDescription(string a)
+{
+  description = a;
+}
+
+void Item::setWriting(string a)
+{
+  writing = a;
+}
+
+// End Item Class
 
 // Begin Container Class
 
@@ -579,9 +588,10 @@ Item * Map::itemParse(xml_node<> * tag)
     {
       // TODO
     }
-    else if(!nodeName.compare("trigger")) // Double check this
+    else if(!nodeName.compare("trigger"))
     {
-      // TODO
+      Trigger * newTrigger = triggerParse(temp);
+      newItem->triggers.push_back(newTrigger);
     }
   }
 
