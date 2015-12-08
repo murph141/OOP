@@ -89,7 +89,7 @@ ostream& operator<<(ostream& os, const Trigger& newTrigger)
     os << newTrigger.actions[i] << endl;
   }
 
-  os << "Condition: " << endl << *newTrigger.condition << endl;
+  os << "Condition: " << endl << *newTrigger.condition;
 
   return(os);
 }
@@ -116,6 +116,69 @@ void Trigger::setAction(string a)
 
 // End Trigger Class
 
+// Begin Turnon Class
+
+class Turnon
+{
+  public:
+    void setPrint(string);
+    void setAction(string);
+    friend ostream& operator<<(ostream&, const Turnon&);
+
+    string print, action;
+};
+
+ostream& operator<<(ostream& os, const Turnon& newTurnon)
+{
+  os << "Print: " << newTurnon.print << endl;
+  os << "Action: " << newTurnon.action << endl;
+
+  return(os);
+}
+
+void Turnon::setPrint(string a)
+{
+  print = a;
+}
+
+void Turnon::setAction(string a)
+{
+  action = a;
+}
+
+// End Turnon Class
+
+// Begin Border Class
+
+class Border
+{
+  public:
+    void setDirection(char);
+    void setName(string);
+    friend ostream& operator<<(ostream&, const Border&);
+
+    string name;
+    char direction;
+};
+
+ostream& operator<<(ostream& os, const Border& newBorder)
+{
+  os << "Direction: " << newBorder.direction << endl;
+  os << "Name: " << newBorder.name << endl;
+}
+
+void Border::setDirection(char a)
+{
+  direction = a;
+}
+
+void Border::setName(string a)
+{
+  name = a;
+}
+
+// End Border Class
+
 // Begin Item Class
 
 class Item
@@ -123,7 +186,7 @@ class Item
   public:
     string name, status, description, writing;
     vector<Trigger *> triggers;
-    // Turn on
+    Turnon * turnon;
     void setName(string);
     void setStatus(string);
     void setDescription(string);
@@ -366,7 +429,7 @@ class Room
     void setCreature(string);
     void setContainer(string);
 
-    vector<char> direction;
+    vector<Border *> borders;
     vector<string> containers;
     vector<string> items;
     vector<string> creatures;
@@ -414,6 +477,13 @@ ostream& operator<<(ostream& os, const Room& newRoom)
   for(int i = 0; i < newRoom.triggers.size(); i++)
   {
     os << *newRoom.triggers[i] << endl;
+  }
+
+  os << "Borders: " << endl;
+
+  for(int i = 0; i < newRoom.borders.size(); i++)
+  {
+    os << *newRoom.borders[i] << endl;
   }
 
   return(os);
@@ -475,6 +545,8 @@ class Map
     Attack * attackParse(xml_node<> *);
     Condition * conditionParse(xml_node<> *);
     Trigger * triggerParse(xml_node<> *);
+    Border * borderParse(xml_node<> *);
+    Turnon * turnonParse(xml_node<> *);
 };
 
 ostream& operator<<(ostream& os, const Map& newMap)
@@ -584,9 +656,10 @@ Item * Map::itemParse(xml_node<> * tag)
     {
       newItem->setWriting(nodeValue);
     }
-    else if(!nodeName.compare("turn on"))
+    else if(!nodeName.compare("turnon"))
     {
-      // TODO
+      Turnon * newTurnon = turnonParse(temp);
+      newItem->turnon = newTurnon;
     }
     else if(!nodeName.compare("trigger"))
     {
@@ -625,7 +698,8 @@ Room * Map::roomParse(xml_node<> * tag)
     }
     else if(!nodeName.compare("border"))
     {
-      // TODO
+      Border * newBorder = borderParse(temp);
+      newRoom->borders.push_back(newBorder);
     }
     else if(!nodeName.compare("container"))
     {
@@ -820,6 +894,49 @@ Trigger * Map::triggerParse(xml_node<> * tag)
   return(newTrigger);
 }
 
+Border * Map::borderParse(xml_node<> * tag)
+{
+  Border * newBorder = new Border();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("direction"))
+    {
+      newBorder->setDirection(nodeValue[0]);
+    }
+    else if(!nodeName.compare("name"))
+    {
+      newBorder->setName(nodeValue);
+    }
+  }
+
+  return(newBorder);
+}
+
+Turnon * Map::turnonParse(xml_node<> * tag)
+{
+  Turnon * newTurnon = new Turnon();
+
+  for(xml_node<> * temp = tag->first_node(); temp; temp = temp->next_sibling())
+  {
+    string nodeName = convertToString(temp, 0);
+    string nodeValue = convertToString(temp, 1);
+
+    if(!nodeName.compare("print"))
+    {
+      newTurnon->setPrint(nodeValue);
+    }
+    else if(!nodeName.compare("action"))
+    {
+      newTurnon->setAction(nodeValue);
+    }
+  }
+
+  return(newTurnon);
+}
 
 // x = 0 -- name
 //   = 1 -- value
