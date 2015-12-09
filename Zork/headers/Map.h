@@ -626,7 +626,7 @@ Map::Map(string inputFile)
   for(xml_node<> * tag = node->first_node(); tag; tag = tag->next_sibling())
   {
     string nodeName = convertToString(tag, 0);
-    
+
     if(!nodeName.compare("room"))
     {
       Room * newRoom = roomParse(tag);
@@ -1099,14 +1099,14 @@ void Map::printInventory()
   {
     int i = 0;
 
-    while(i != inventory.size() - 2)
+    while(i != inventory.size() - 1)
     {
-      cout << inventory[i] << ", ";
+      cout << inventory[i++] << ", ";
     }
 
     cout << inventory[i];
   }
-  
+
   cout << endl;
 }
 
@@ -1218,6 +1218,19 @@ void Map::readItem(string item)
 
 void Map::dropItem(string item)
 {
+  for(int i = 0; i < inventory.size(); i++)
+  {
+    if(!inventory[i].compare(item))
+    {
+      inventory.erase(inventory.begin() + i);
+
+      currentRoom->items.push_back(item);
+
+      cout << item << " dropped" << endl;
+
+      return;
+    }
+  }
 }
 
 void Map::putItemInContainer(string item, string container)
