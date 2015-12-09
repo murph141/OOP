@@ -565,6 +565,7 @@ class Map
     Trigger * triggerParse(xml_node<> *);
     Border * borderParse(xml_node<> *);
     Turnon * turnonParse(xml_node<> *);
+    void parseMove(string);
 
     void startGame();
     void moveRooms(string);
@@ -1023,59 +1024,12 @@ void Map::startGame()
     cout << "> ";
     getline(cin, input);
 
-    istringstream iss(input);
-    vector<string> vec;
-
-    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vec));
-
     int returnVal = checkTriggers(input);
 
     if(returnVal) continue;
 
-    if(vec.size() == 1 && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e")))
-    {
-      moveRooms(vec[0]);
-    }
-    else if(vec.size() == 1 && !input.compare("i"))
-    {
-      printInventory();
-    }
-    else if(vec.size() == 2 && !vec[0].compare("take"))
-    {
-      takeItem(vec[1]);
-    }
-    else if(vec.size() == 2 && !input.compare("open exit"))
-    {
-      openExit();
-    }
-    else if(vec.size() == 2 && !vec[0].compare("open"))
-    {
-      openContainer(vec[1]);
-    }
-    else if(vec.size() == 2 && !vec[0].compare("read"))
-    {
-      readItem(vec[1]);
-    }
-    else if(vec.size() == 2 && !vec[0].compare("drop"))
-    {
-      dropItem(vec[1]);
-    }
-    else if(vec.size() == 4 && !vec[0].compare("put") && !vec[2].compare("in"))
-    {
-      putItemInContainer(vec[1], vec[3]);
-    }
-    else if(vec.size() == 3 && !vec[0].compare("turn") && !vec[1].compare("on"))
-    {
-      turnOnItem(vec[2]);
-    }
-    else if(vec.size() == 4 && !vec[0].compare("attack") && !vec[2].compare("with"))
-    {
-      attackCreature(vec[1], vec[3]);
-    }
-    else
-    {
-      cout << "Error" << endl;
-    }
+    parseMove(input);
+
   } while(!gameOver);
 }
 
@@ -1300,6 +1254,8 @@ void Map::turnOnItem(string item)
     {
       for(int j = 0; j < items.size(); j++)
       {
+        //cout << *items[j] << endl;
+
         if(!items[j]->name.compare(item))// && !items[j]->turnon->on)
         {
           items[j]->turnon->on = 1;
@@ -1307,14 +1263,38 @@ void Map::turnOnItem(string item)
           cout << "You activate the " << item << endl;
           cout << items[j]->turnon->print << endl;
           // Do item action TODO
-          return;
-        }
-        else
-        {
-          cout << item << " is already on." << endl;
+
+          string action = items[j]->turnon->action;
+
+          istringstream iss(action);
+          vector<string> vec;
+
+          copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vec));
+          
+          if(vec[0].compare("update") && vec.size() == 4)
+          {
+            string item = vec[1];
+            string status = vec[3];
+
+            for(int k = 0; k < items.size(); k++)
+            {
+              // Found item
+              if(!items[k]->name.compare(item))
+              {
+                items[k]->setStatus(status);
+              }
+            }
+          }
+          else
+          {
+            parseMove(action);
+          }
+
           return;
         }
       }
+
+      //cout << item << " is already on." << endl;
     }
   }
 
@@ -1335,12 +1315,12 @@ void Map::attackCreature(string creature, string item)
           {
             if(!currentRoom->creatures[k].compare(creature))
             {
-              cout << "You assault the " << creature << " with the " << item << endl;
-
               for(int l = 0; l < creatures[j]->vulnerabilities.size(); l++)
               {
                 if(!creatures[j]->vulnerabilities[l].compare(item))
                 {
+                  cout << "You assault the " << creature << " with the " << item << endl;
+
                   // execute attack elements
                   return;
                 }
@@ -1351,6 +1331,7 @@ void Map::attackCreature(string creature, string item)
       }
     }
   }
+  cout << "Error" << endl;
 }
 
 // Check single vs permanent TODO
@@ -1399,6 +1380,11 @@ int Map::checkTriggers(string command)
                     for(int m = 0; m < inventory.size(); m++)
                     {
                       // Found the item in the inventory
+                      if(currentRoom->triggers[i]->type.compare("single"))
+                      {
+                        currentRoom->triggers[i]->active = 0;
+                      }
+
                       return(0);
                     }
                   }
@@ -1432,6 +1418,11 @@ int Map::checkTriggers(string command)
                   if(!cond->has.compare("yes"))
                   {
                     // Found the item in the inventory
+                    if(currentRoom->triggers[i]->type.compare("single"))
+                    {
+                      currentRoom->triggers[i]->active = 0;
+                    }
+
                     cout << currentRoom->triggers[i]->print << endl;
                     return(1);
                   }
@@ -1447,6 +1438,11 @@ int Map::checkTriggers(string command)
           // If not in inventory
           if(!cond->has.compare("no"))
           {
+            if(currentRoom->triggers[i]->type.compare("single"))
+            {
+              currentRoom->triggers[i]->active = 0;
+            }
+
             cout << currentRoom->triggers[i]->print << endl;
             return(1);
           }
@@ -1457,4 +1453,58 @@ int Map::checkTriggers(string command)
 
   return(0);
 }
+
+void Map::parseMove(string input)
+{
+  istringstream iss(input);
+  vector<string> vec;
+
+  copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vec));
+
+  if(vec.size() == 1 && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e")))
+  {
+    moveRooms(vec[0]);
+  }
+  else if(vec.size() == 1 && !input.compare("i"))
+  {
+    printInventory();
+  }
+  else if(vec.size() == 2 && !vec[0].compare("take"))
+  {
+    takeItem(vec[1]);
+  }
+  else if(vec.size() == 2 && !input.compare("open exit"))
+  {
+    openExit();
+  }
+  else if(vec.size() == 2 && !vec[0].compare("open"))
+  {
+    openContainer(vec[1]);
+  }
+  else if(vec.size() == 2 && !vec[0].compare("read"))
+  {
+    readItem(vec[1]);
+  }
+  else if(vec.size() == 2 && !vec[0].compare("drop"))
+  {
+    dropItem(vec[1]);
+  }
+  else if(vec.size() == 4 && !vec[0].compare("put") && !vec[2].compare("in"))
+  {
+    putItemInContainer(vec[1], vec[3]);
+  }
+  else if(vec.size() == 3 && !vec[0].compare("turn") && !vec[1].compare("on"))
+  {
+    turnOnItem(vec[2]);
+  }
+  else if(vec.size() == 4 && !vec[0].compare("attack") && !vec[2].compare("with"))
+  {
+    attackCreature(vec[1], vec[3]);
+  }
+  else
+  {
+    cout << "Error" << endl;
+  }
+}
+
 #endif // __MAP_H_
