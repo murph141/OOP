@@ -530,6 +530,7 @@ class Map
 
   public:
     Map(string);
+    virtual ~Map();
 
     Room * currentRoom;
     vector<Room *> rooms;
@@ -537,6 +538,7 @@ class Map
     vector<Creature *> creatures;
     vector<Container *> containers;
     vector<string> inventory;
+    int gameOver;
 
     friend ostream& operator<<(ostream&, const Map&);
     Item * itemParse(xml_node<> *);
@@ -562,6 +564,11 @@ class Map
     void attackCreature(string, string);
 
 };
+
+Map::~Map()
+{
+  // TODO
+}
 
 ostream& operator<<(ostream& os, const Map& newMap)
 {
@@ -600,6 +607,8 @@ ostream& operator<<(ostream& os, const Map& newMap)
 
 Map::Map(string inputFile)
 {
+  gameOver = 0;
+
   file<> xmlFile(inputFile.c_str());
   xml_document<> doc;
   xml_node<> * node;
@@ -1048,7 +1057,7 @@ void Map::startGame()
     {
       cout << "Error" << endl;
     }
-  } while(1);
+  } while(!gameOver);
 }
 
 void Map::moveRooms(string direction)
@@ -1109,6 +1118,7 @@ void Map::takeItem(string item)
   {
     if(!currentRoom->items[i].compare(item))
     {
+      cout << "Item " << item << " added to inventory." << endl;
       inventory.push_back(item);
 
       currentRoom->items.erase(currentRoom->items.begin() + i);
@@ -1116,21 +1126,72 @@ void Map::takeItem(string item)
     }
   }
 
+  // TODO
   for(int i = 0; i < currentRoom->containers.size(); i++)
   {
-    if(!currentRoom->containers[i].compare(item))
+    for(int j = 0; j < containers.size(); j++)
     {
-      cout << "found" << endl;
+      if(!currentRoom->containers[i].compare(containers[j]->name))
+      {
+        for(int k = 0; k < containers[j]->items.size(); k++)
+        {
+          if(!containers[j]->items[k].compare(item) && containers[j]->open)
+          {
+            cout << "Item " << item << " added to inventory." << endl;
+
+            inventory.push_back(item);
+            containers[j]->items.erase(containers[j]->items.begin() + k);
+            return;
+          }
+        }
+      }
     }
   }
+
+  cout << "Error" << endl;
 }
 
 void Map::openExit()
 {
+  if(currentRoom->type.compare("exit"))
+  {
+    cout << "Game Over" << endl;
+    gameOver = 1;
+  }
 }
 
 void Map::openContainer(string container)
 {
+  for(int i = 0; i < currentRoom->containers.size(); i++)
+  {
+    if(currentRoom->containers[i].compare(container))
+    {
+      for(int j = 0; j < containers.size(); j++)
+      {
+        if(!containers[j]->name.compare(container) && !containers[j]->open)
+        {
+          containers[j]->open = 1;
+
+          if(containers[j]->items.size() == 0)
+          {
+            cout << container << " is empty." << endl;
+            return;
+          }
+
+          cout << "Container " << container << " contains ";
+
+          int size = containers[j]->items.size();
+
+          for(int k = 0; k < size - 1; k++)
+          {
+            cout << containers[j]->items[k] << ", ";
+          }
+
+          cout << containers[j]->items[size - 1] << endl;
+        }
+      }
+    }
+  }
 }
 
 void Map::readItem(string item)
