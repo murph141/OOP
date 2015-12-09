@@ -153,12 +153,11 @@ void Turnon::setAction(string a)
 class Border
 {
   public:
-    void setDirection(char);
+    void setDirection(string);
     void setName(string);
     friend ostream& operator<<(ostream&, const Border&);
 
-    string name;
-    char direction;
+    string name, direction;
 };
 
 ostream& operator<<(ostream& os, const Border& newBorder)
@@ -167,7 +166,7 @@ ostream& operator<<(ostream& os, const Border& newBorder)
   os << "Name: " << newBorder.name << endl;
 }
 
-void Border::setDirection(char a)
+void Border::setDirection(string a)
 {
   direction = a;
 }
@@ -449,8 +448,6 @@ ostream& operator<<(ostream& os, const Room& newRoom)
   os << "Type: " << newRoom.type << endl;
   os << "Description: " << newRoom.description << endl;
 
-  // Print directions
-  
   os << "Containers: " << endl;
 
   for(int i = 0; i < newRoom.containers.size(); i++)
@@ -550,6 +547,17 @@ class Map
     Turnon * turnonParse(xml_node<> *);
 
     void startGame();
+    void moveRooms(string);
+    void printInventory();
+    void takeItem(string);
+    void openExit();
+    void openContainer(string);
+    void readItem(string);
+    void dropItem(string);
+    void putItemInContainer(string, string);
+    void turnOnItem(string);
+    void attackCreature(string, string);
+
 };
 
 ostream& operator<<(ostream& os, const Map& newMap)
@@ -909,7 +917,8 @@ Border * Map::borderParse(xml_node<> * tag)
 
     if(!nodeName.compare("direction"))
     {
-      newBorder->setDirection(nodeValue[0]);
+      nodeValue = nodeValue[0];
+      newBorder->setDirection(nodeValue);
     }
     else if(!nodeName.compare("name"))
     {
@@ -992,45 +1001,109 @@ void Map::startGame()
 
     if(vec.size() == 1 && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e")))
     {
-      cout << "Moving rooms" << endl;
+      moveRooms(vec[0]);
+      cout << *currentRoom;
     }
     else if(vec.size() == 1 && !input.compare("i"))
     {
-      cout << "Display the inventory" << endl;
+      printInventory();
     }
     else if(vec.size() == 2 && !vec[0].compare("take"))
     {
-      cout << "Take the item" << endl;
+      takeItem(vec[1]);
     }
     else if(vec.size() == 2 && !input.compare("open exit"))
     {
-      cout << "Opening the exit" << endl;
+      openExit();
     }
     else if(vec.size() == 2 && !vec[0].compare("open"))
     {
-      cout << "Open the container" << endl;
+      openContainer(vec[1]);
     }
     else if(vec.size() == 2 && !vec[0].compare("read"))
     {
-      cout << "Read the item" << endl;
+      readItem(vec[1]);
     }
     else if(vec.size() == 2 && !vec[0].compare("drop"))
     {
-      cout << "Drop the item" << endl;
+      dropItem(vec[1]);
     }
     else if(vec.size() == 4 && !vec[0].compare("put") && !vec[2].compare("in"))
     {
-      cout << "Put the item in the container" << endl;
+      putItemInContainer(vec[1], vec[3]);
     }
     else if(vec.size() == 3 && !vec[0].compare("turn") && !vec[1].compare("on"))
     {
-      cout << "Turn on the item" << endl;
+      turnOnItem(vec[2]);
     }
     else if(vec.size() == 4 && !vec[0].compare("attack") && !vec[2].compare("with"))
     {
-      cout << "Attack the creature with the item" << endl;
+      attackCreature(vec[1], vec[3]);
+    }
+    else
+    {
+      cout << "Error" << endl;
     }
   } while(1);
+}
+
+void Map::moveRooms(string direction)
+{
+  for(int i = 0; i < currentRoom->borders.size(); i++)
+  {
+    if(!currentRoom->borders[i]->direction.compare(direction))
+    {
+      for(int j = 0; j < rooms.size(); j++)
+      {
+        if(!rooms[j]->name.compare(currentRoom->borders[i]->name))
+        {
+          currentRoom = rooms[j];
+          return;
+        }
+      }
+    }
+
+    if(i + 1 == currentRoom->borders.size())
+    {
+      cout << "Can't go that way" << endl;
+    }
+  }
+}
+
+void Map::printInventory()
+{
+}
+
+void Map::takeItem(string item)
+{
+}
+
+void Map::openExit()
+{
+}
+
+void Map::openContainer(string container)
+{
+}
+
+void Map::readItem(string item)
+{
+}
+
+void Map::dropItem(string item)
+{
+}
+
+void Map::putItemInContainer(string item, string container)
+{
+}
+
+void Map::turnOnItem(string item)
+{
+}
+
+void Map::attackCreature(string creature, string item)
+{
 }
 
 #endif // __MAP_H_
