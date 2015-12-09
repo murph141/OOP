@@ -1071,8 +1071,6 @@ void Map::moveRooms(string direction)
         if(!rooms[j]->name.compare(currentRoom->borders[i]->name))
         {
           currentRoom = rooms[j];
-
-          //cout << currentRoom->description << endl;
           return;
         }
       }
@@ -1153,7 +1151,7 @@ void Map::takeItem(string item)
 
 void Map::openExit()
 {
-  if(currentRoom->type.compare("exit"))
+  if(!currentRoom->type.compare("exit"))
   {
     cout << "Game Over" << endl;
     gameOver = 1;
@@ -1196,6 +1194,26 @@ void Map::openContainer(string container)
 
 void Map::readItem(string item)
 {
+  for(int i = 0; i < inventory.size(); i++)
+  {
+    if(!inventory[i].compare(item))
+    {
+      for(int j = 0; j < items.size(); j++)
+      {
+        if(!item.compare(items[j]->name))
+        {
+          if(!items[j]->writing.compare(""))
+          {
+            cout << "Nothing written." << endl;
+            return;
+          }
+
+          cout << items[j]->writing << endl;
+          return;
+        }
+      }
+    }
+  }
 }
 
 void Map::dropItem(string item)
