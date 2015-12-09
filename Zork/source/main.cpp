@@ -10,7 +10,7 @@ int main(int argc, char * argv[])
 
   Map newMap(argv[1]);
 
-  cout << newMap;
+  newMap.startGame();
 
   return(0);
 }

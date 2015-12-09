@@ -532,6 +532,7 @@ class Map
   public:
     Map(string);
 
+    Room * currentRoom;
     vector<Room *> rooms;
     vector<Item *> items;
     vector<Creature *> creatures;
@@ -547,6 +548,8 @@ class Map
     Trigger * triggerParse(xml_node<> *);
     Border * borderParse(xml_node<> *);
     Turnon * turnonParse(xml_node<> *);
+
+    void startGame();
 };
 
 ostream& operator<<(ostream& os, const Map& newMap)
@@ -956,6 +959,78 @@ string convertToString(xml_node<> * t, int x)
   }
 
   return(ss.str());
+}
+
+// End Parsing Logic
+
+void Map::startGame()
+{
+  currentRoom = NULL;
+
+  for(int i = 0; i < rooms.size(); i++)
+  {
+    if(!rooms[i]->name.compare("Entrance"))
+    {
+      currentRoom = rooms[i];
+      break;
+    }
+  }
+
+  if(!currentRoom) cout << "ERROR" << endl;
+
+  string input;
+
+  do
+  {
+    cout << "> ";
+    getline(cin, input);
+
+    istringstream iss(input);
+    vector<string> vec;
+
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vec));
+
+    if(vec.size() == 1 && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e")))
+    {
+      cout << "Moving rooms" << endl;
+    }
+    else if(vec.size() == 1 && !input.compare("i"))
+    {
+      cout << "Display the inventory" << endl;
+    }
+    else if(vec.size() == 2 && !vec[0].compare("take"))
+    {
+      cout << "Take the item" << endl;
+    }
+    else if(vec.size() == 2 && !input.compare("open exit"))
+    {
+      cout << "Opening the exit" << endl;
+    }
+    else if(vec.size() == 2 && !vec[0].compare("open"))
+    {
+      cout << "Open the container" << endl;
+    }
+    else if(vec.size() == 2 && !vec[0].compare("read"))
+    {
+      cout << "Read the item" << endl;
+    }
+    else if(vec.size() == 2 && !vec[0].compare("drop"))
+    {
+      cout << "Drop the item" << endl;
+    }
+    else if(vec.size() == 4 && !vec[0].compare("put") && !vec[2].compare("in"))
+    {
+      cout << "Put the item in the container" << endl;
+    }
+    else if(vec.size() == 3 && !vec[0].compare("turn") && !vec[1].compare("on"))
+    {
+      cout << "Turn on the item" << endl;
+    }
+    else if(vec.size() == 4 && !vec[0].compare("attack") && !vec[2].compare("with"))
+    {
+      cout << "Attack the creature with the item" << endl;
+    }
+  } while(1);
 }
 
 #endif // __MAP_H_
