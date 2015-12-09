@@ -1322,7 +1322,6 @@ void Map::attackCreature(string creature, string item)
                 if(!creatures[j]->vulnerabilities[l].compare(item))
                 {
                   // execute attack elements
-                  cout << "ATTACK" << endl;
                 }
               }
             }
