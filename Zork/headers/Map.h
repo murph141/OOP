@@ -1303,6 +1303,34 @@ void Map::turnOnItem(string item)
 
 void Map::attackCreature(string creature, string item)
 {
+  for(int i = 0; i < inventory.size(); i++)
+  {
+    if(!inventory[i].compare(item))
+    {
+      for(int j = 0; j < creatures.size(); j++)
+      {
+        if(!creatures[j]->name.compare(creature))
+        {
+          for(int k = 0; k < currentRoom->creatures.size(); k++)
+          {
+            if(!currentRoom->creatures[k].compare(creature))
+            {
+              cout << "You assault the " << creature << " with the " << item << endl;
+
+              for(int l = 0; l < creatures[j]->vulnerabilities.size(); l++)
+              {
+                if(!creatures[j]->vulnerabilities[l].compare(item))
+                {
+                  // execute attack elements
+                  cout << "ATTACK" << endl;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 #endif // __MAP_H_
