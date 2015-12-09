@@ -126,6 +126,7 @@ class Turnon
     friend ostream& operator<<(ostream&, const Turnon&);
 
     string print, action;
+    int on;
 };
 
 ostream& operator<<(ostream& os, const Turnon& newTurnon)
@@ -1187,6 +1188,16 @@ void Map::openContainer(string container)
 
           cout << containers[j]->items[size - 1] << endl;
         }
+
+        // May add feature later
+
+        //else if(!containers[j]->name.compare(container))
+        //{
+        //  for(int k = 0; k < containers[j]->items.size(); k++)
+        //  {
+        //    cout << containers[j]->items[k] << endl;
+        //  }
+        //}
       }
     }
   }
@@ -1235,10 +1246,59 @@ void Map::dropItem(string item)
 
 void Map::putItemInContainer(string item, string container)
 {
+  for(int i = 0; i < inventory.size(); i++)
+  {
+    if(!inventory[i].compare(item))
+    {
+      for(int j = 0; j < currentRoom->containers.size(); j++)
+      {
+        if(!currentRoom->containers[j].compare(container))
+        {
+          for(int k = 0; k < containers.size(); k++)
+          {
+            if(!containers[k]->name.compare(container) && containers[k]->open)
+            {
+              containers[k]->setItem(item);
+
+              inventory.erase(inventory.begin() + i);
+
+              currentRoom->containers.push_back(item);
+
+              cout << "Item " << item << " added to " << container << endl;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void Map::turnOnItem(string item)
 {
+  for(int i = 0; i < inventory.size(); i++)
+  {
+    if(!inventory[i].compare(item))
+    {
+      for(int j = 0; j < items.size(); j++)
+      {
+        if(!items[j]->name.compare(item) && !items[j]->turnon->on)
+        {
+          items[j]->turnon->on = 1;
+
+          cout << "You activate the " << item << endl;
+          cout << items[j]->turnon->print << endl;
+          // Do item action
+          return;
+        }
+        else
+        {
+          cout << item << " is already on." << endl;
+        }
+      }
+    }
+  }
+
+  cout << "Item not found" << endl;
 }
 
 void Map::attackCreature(string creature, string item)
