@@ -128,6 +128,7 @@ void Trigger::setAction(string a)
 class Turnon
 {
   public:
+    Turnon();
     void setPrint(string);
     void setAction(string);
     friend ostream& operator<<(ostream&, const Turnon&);
@@ -140,8 +141,14 @@ ostream& operator<<(ostream& os, const Turnon& newTurnon)
 {
   os << "Print: " << newTurnon.print << endl;
   os << "Action: " << newTurnon.action << endl;
+  os << "On: " << newTurnon.on;
 
   return(os);
+}
+
+Turnon::Turnon()
+{
+  on = 0;
 }
 
 void Turnon::setPrint(string a)
@@ -1293,18 +1300,19 @@ void Map::turnOnItem(string item)
     {
       for(int j = 0; j < items.size(); j++)
       {
-        if(!items[j]->name.compare(item) && !items[j]->turnon->on)
+        if(!items[j]->name.compare(item))// && !items[j]->turnon->on)
         {
           items[j]->turnon->on = 1;
 
           cout << "You activate the " << item << endl;
           cout << items[j]->turnon->print << endl;
-          // Do item action
+          // Do item action TODO
           return;
         }
         else
         {
           cout << item << " is already on." << endl;
+          return;
         }
       }
     }
@@ -1359,6 +1367,7 @@ int Map::checkTriggers(string command)
       Item * triggerItem;
       string item = cond->object;
 
+      // Iterate through items
       for(int j = 0; j < items.size(); j++)
       {
         if(!items[j]->name.compare(item))
@@ -1366,7 +1375,46 @@ int Map::checkTriggers(string command)
           triggerItem = items[j];
           break;
         }
+
+        // Iterate through containers if it wasn't in items
+        if(j == items.size() - 1)
+        {
+          Container * triggerContainer;
+
+          for(int k = 0; k < containers.size(); k++)
+          {
+            // It is inside a container
+            if(!containers[k]->name.compare(item))
+            {
+              triggerContainer = containers[k];
+
+              // Check if the statuses are the same
+              if(!cond->status.compare("") || !cond->status.compare(triggerContainer->status))
+              {
+                // Check if it is in the inventory
+                for(int l = 0; l < inventory.size(); l++)
+                {
+                  if(!cond->object.compare(inventory[l]))
+                  {
+                    for(int m = 0; m < inventory.size(); m++)
+                    {
+                      // Found the item in the inventory
+                      return(0);
+                    }
+                  }
+                }
+
+                // It isn't in the inventory
+                cout << currentRoom->triggers[i]->print << endl;
+                return(1);
+              }
+            }
+          }
+        }
+
+        // It isn't inside the items or containers (Creatures left)
       }
+
 
       if(!cond->status.compare("") || !cond->status.compare(triggerItem->status))
       {
@@ -1405,11 +1453,6 @@ int Map::checkTriggers(string command)
         }
       }
     }
-
-    //// If there is a command
-    //else if(!currentRoom->triggers[i]->command.compare(command))
-    //{
-    //}
   }
 
   return(0);

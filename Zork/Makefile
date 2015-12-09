@@ -1,5 +1,5 @@
 GCC = g++
-CFLAGS = #-Werror -Wbad-function-cast -Wall -Wshadow -ggdb3
+CFLAGS = -ggdb3#-Werror -Wbad-function-cast -Wall -Wshadow -ggdb3
 SOURCES = source/main.cpp
 OBJS = $(SOURCES:.cpp=.o)
 HDRS = headers/Map.h
