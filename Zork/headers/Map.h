@@ -66,6 +66,7 @@ void Condition::setOwner(string a)
 class Trigger
 {
   public:
+    Trigger();
     void setType(string);
     void setCommand(string);
     void setPrint(string);
@@ -73,6 +74,7 @@ class Trigger
     friend ostream& operator<<(ostream&, const Trigger&);
 
     string type, command, print;
+    int active;
     Condition * condition;
     vector<string> actions;
 };
@@ -92,6 +94,11 @@ ostream& operator<<(ostream& os, const Trigger& newTrigger)
   os << "Condition: " << endl << *newTrigger.condition;
 
   return(os);
+}
+
+Trigger::Trigger()
+{
+  active = 1;
 }
 
 void Trigger::setType(string a)
@@ -563,7 +570,7 @@ class Map
     void putItemInContainer(string, string);
     void turnOnItem(string);
     void attackCreature(string, string);
-
+    int checkTriggers(string);
 };
 
 Map::~Map()
@@ -1014,6 +1021,10 @@ void Map::startGame()
 
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vec));
 
+    int returnVal = checkTriggers(input);
+
+    if(returnVal) continue;
+
     if(vec.size() == 1 && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e")))
     {
       moveRooms(vec[0]);
@@ -1072,6 +1083,7 @@ void Map::moveRooms(string direction)
         if(!rooms[j]->name.compare(currentRoom->borders[i]->name))
         {
           currentRoom = rooms[j];
+          cout << currentRoom->description << endl;
           return;
         }
       }
@@ -1322,6 +1334,7 @@ void Map::attackCreature(string creature, string item)
                 if(!creatures[j]->vulnerabilities[l].compare(item))
                 {
                   // execute attack elements
+                  return;
                 }
               }
             }
@@ -1332,4 +1345,73 @@ void Map::attackCreature(string creature, string item)
   }
 }
 
+// Check single vs permanent TODO
+int Map::checkTriggers(string command)
+{
+  // Look through triggers
+  for(int i = 0; i < currentRoom->triggers.size(); i++)
+  {
+    // If there is no command
+    if(!currentRoom->triggers[i]->command.compare("") || !currentRoom->triggers[i]->command.compare(command))
+    {
+      // Check condition
+      Condition * cond = currentRoom->triggers[i]->condition;
+      Item * triggerItem;
+      string item = cond->object;
+
+      for(int j = 0; j < items.size(); j++)
+      {
+        if(!items[j]->name.compare(item))
+        {
+          triggerItem = items[j];
+          break;
+        }
+      }
+
+      if(!cond->status.compare("") || !cond->status.compare(triggerItem->status))
+      {
+        if(cond->owner.compare(""))
+        {
+          // Check if it is in the inventory
+          for(int k = 0; k < inventory.size(); k++)
+          {
+            if(!cond->object.compare(inventory[k]))// && !cond->has.compare("yes"))
+            {
+              for(int l = 0; l < inventory.size(); l++)
+              {
+                if(!inventory[l].compare(item))
+                {
+                  if(!cond->has.compare("yes"))
+                  {
+                    // Found the item in the inventory
+                    cout << currentRoom->triggers[i]->print << endl;
+                    return(1);
+                  }
+                  else
+                  {
+                    return(0);
+                  }
+                }
+              }
+            }
+          }
+
+          // If not in inventory
+          if(!cond->has.compare("no"))
+          {
+            cout << currentRoom->triggers[i]->print << endl;
+            return(1);
+          }
+        }
+      }
+    }
+
+    //// If there is a command
+    //else if(!currentRoom->triggers[i]->command.compare(command))
+    //{
+    //}
+  }
+
+  return(0);
+}
 #endif // __MAP_H_
