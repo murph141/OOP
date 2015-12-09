@@ -237,6 +237,7 @@ void Item::setWriting(string a)
 class Container
 {
   public:
+    int open;
     string name, status, description;
     vector<string> acceptedItems;
     vector<string> items;
@@ -252,6 +253,7 @@ class Container
 
 ostream& operator<<(ostream& os, const Container& newContainer)
 {
+  os << "Open: " << newContainer.open << endl;
   os << "Name: " << newContainer.name << endl;
   os << "Status: " << newContainer.status << endl;
   os << "Description: " << newContainer.description << endl;
@@ -534,6 +536,7 @@ class Map
     vector<Item *> items;
     vector<Creature *> creatures;
     vector<Container *> containers;
+    vector<string> inventory;
 
     friend ostream& operator<<(ostream&, const Map&);
     Item * itemParse(xml_node<> *);
@@ -987,6 +990,8 @@ void Map::startGame()
 
   if(!currentRoom) cout << "ERROR" << endl;
 
+  cout << currentRoom->description << endl;
+
   string input;
 
   do
@@ -1002,7 +1007,6 @@ void Map::startGame()
     if(vec.size() == 1 && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e")))
     {
       moveRooms(vec[0]);
-      cout << *currentRoom;
     }
     else if(vec.size() == 1 && !input.compare("i"))
     {
@@ -1058,6 +1062,8 @@ void Map::moveRooms(string direction)
         if(!rooms[j]->name.compare(currentRoom->borders[i]->name))
         {
           currentRoom = rooms[j];
+
+          //cout << currentRoom->description << endl;
           return;
         }
       }
@@ -1072,10 +1078,51 @@ void Map::moveRooms(string direction)
 
 void Map::printInventory()
 {
+  cout << "Inventory: ";
+
+  if(inventory.size() == 0)
+  {
+    cout << "empty";
+  }
+  else if(inventory.size() == 1)
+  {
+    cout << inventory[0];
+  }
+  else
+  {
+    int i = 0;
+
+    while(i != inventory.size() - 2)
+    {
+      cout << inventory[i] << ", ";
+    }
+
+    cout << inventory[i];
+  }
+  
+  cout << endl;
 }
 
 void Map::takeItem(string item)
 {
+  for(int i = 0; i < currentRoom->items.size(); i++)
+  {
+    if(!currentRoom->items[i].compare(item))
+    {
+      inventory.push_back(item);
+
+      currentRoom->items.erase(currentRoom->items.begin() + i);
+      return;
+    }
+  }
+
+  for(int i = 0; i < currentRoom->containers.size(); i++)
+  {
+    if(!currentRoom->containers[i].compare(item))
+    {
+      cout << "found" << endl;
+    }
+  }
 }
 
 void Map::openExit()
