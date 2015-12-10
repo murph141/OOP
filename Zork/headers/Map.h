@@ -1509,6 +1509,16 @@ int Map::checkTriggers(vector<Trigger *> node, string command)
         }
       }
 
+      for(int ii = 0; ii < containers.size(); ii++)
+      {
+        if(!itemName.compare(containers[ii]->name) && !cond->owner.compare(""))
+        {
+          searchString = cond->object;
+          itemValid = 2;
+          break;
+        }
+      }
+
       if(!cond->owner.compare("inventory"))
       {
         searchThrough = inventory;
@@ -1604,6 +1614,23 @@ int Map::checkTriggers(vector<Trigger *> node, string command)
               return(1);
             }
           }
+        }
+
+        else if(!itemFound && !cond->has.compare("") && !cond->status.compare(currentContainer->status))
+        {
+          cout << node[i]->print << endl;
+
+          for(int iii = 0; iii < node[i]->actions.size(); iii++)
+          {
+            parseAction(node[i]->actions[iii]);
+          }
+
+          if(!node[i]->type.compare("single"))
+          {
+            node[i]->active = 0;
+          }
+
+        return(1);
         }
       }
     }
