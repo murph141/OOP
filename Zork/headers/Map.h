@@ -84,7 +84,9 @@ ostream& operator<<(ostream& os, const Trigger& newTrigger)
   os << "Type: " << newTrigger.type << endl;
   os << "Command: " << newTrigger.command << endl;
   os << "Print: " << newTrigger.print << endl;
+  os << "Active: " << newTrigger.active << endl;
   os << "Actions: " << endl;
+
 
   for(int i = 0; i < newTrigger.actions.size(); i++)
   {
@@ -578,7 +580,11 @@ class Map
     void putItemInContainer(string, string);
     void turnOnItem(string);
     void attackCreature(string, string);
-    int checkTriggers(string);
+
+    int checkTriggers(vector<Trigger *>, string);
+    void checkItems(vector<Item *>, string);
+    int checkCreatures(vector<Creature *>, string);
+    int checkContainers(vector<Container *>, string);
 };
 
 Map::~Map()
@@ -1024,11 +1030,15 @@ void Map::startGame()
     cout << "> ";
     getline(cin, input);
 
-    int returnVal = checkTriggers(input);
-
-    if(returnVal) continue;
+    int returnValTriggers = checkTriggers(currentRoom->triggers, input);
+    
+    if(returnValTriggers && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e"))) continue;
 
     parseMove(input);
+
+    int returnValContainers = checkContainers(containers, input);
+
+    int returnValCreatures = checkCreatures(creatures, input);
 
   } while(!gameOver);
 }
@@ -1334,118 +1344,82 @@ void Map::attackCreature(string creature, string item)
   cout << "Error" << endl;
 }
 
-// Check single vs permanent TODO
-int Map::checkTriggers(string command)
+// Sent the room triggers here (currentRoom->triggers)
+int Map::checkTriggers(vector<Trigger *> node, string command)
 {
-  // Look through triggers
-  for(int i = 0; i < currentRoom->triggers.size(); i++)
+  // Look through the triggers (Current triggers)
+  for(int i = 0; i < node.size(); i++)
   {
-    // If there is no command
-    if(!currentRoom->triggers[i]->command.compare("") || !currentRoom->triggers[i]->command.compare(command))
+    // If the commands are the same, or there is no command
+    if(!node[i]->command.compare("") || !node[i]->command.compare(command))
     {
-      // Check condition
-      Condition * cond = currentRoom->triggers[i]->condition;
-      Item * triggerItem;
-      string item = cond->object;
+      Condition * cond = node[i]->condition;
+      string itemName = cond->object;
+      int itemValid = 0;
 
-      // Iterate through items
+      // Iterate through items (Make sure it is a valid object)
       for(int j = 0; j < items.size(); j++)
       {
-        if(!items[j]->name.compare(item))
+        if(!items[j]->name.compare(itemName))
         {
-          triggerItem = items[j];
+          itemValid = 1;
           break;
         }
-
-        // Iterate through containers if it wasn't in items
-        if(j == items.size() - 1)
-        {
-          Container * triggerContainer;
-
-          for(int k = 0; k < containers.size(); k++)
-          {
-            // It is inside a container
-            if(!containers[k]->name.compare(item))
-            {
-              triggerContainer = containers[k];
-
-              // Check if the statuses are the same
-              if(!cond->status.compare("") || !cond->status.compare(triggerContainer->status))
-              {
-                // Check if it is in the inventory
-                for(int l = 0; l < inventory.size(); l++)
-                {
-                  if(!cond->object.compare(inventory[l]))
-                  {
-                    for(int m = 0; m < inventory.size(); m++)
-                    {
-                      // Found the item in the inventory
-                      if(currentRoom->triggers[i]->type.compare("single"))
-                      {
-                        currentRoom->triggers[i]->active = 0;
-                      }
-
-                      return(0);
-                    }
-                  }
-                }
-
-                // It isn't in the inventory
-                cout << currentRoom->triggers[i]->print << endl;
-                return(1);
-              }
-            }
-          }
-        }
-
-        // It isn't inside the items or containers (Creatures left)
       }
 
-
-      if(!cond->status.compare("") || !cond->status.compare(triggerItem->status))
+      if(!itemValid)
       {
-        if(cond->owner.compare(""))
+        cout << "Error" << endl;
+        return(0);
+      }
+
+      int itemFound = 0;
+      int index;
+      vector<string> searchThrough;
+
+      if(!cond->owner.compare("inventory") || !cond->owner.compare(""))
+      {
+        searchThrough = inventory;
+      }
+      else
+      {
+        searchThrough = currentRoom->containers;
+      }
+
+      // Search for the item
+      for(int j = 0; j < searchThrough.size(); j++)
+      {
+        if(!searchThrough[i].compare(itemName))
         {
-          // Check if it is in the inventory
-          for(int k = 0; k < inventory.size(); k++)
-          {
-            if(!cond->object.compare(inventory[k]))// && !cond->has.compare("yes"))
-            {
-              for(int l = 0; l < inventory.size(); l++)
-              {
-                if(!inventory[l].compare(item))
-                {
-                  if(!cond->has.compare("yes"))
-                  {
-                    // Found the item in the inventory
-                    if(currentRoom->triggers[i]->type.compare("single"))
-                    {
-                      currentRoom->triggers[i]->active = 0;
-                    }
+          itemFound = 1;
+          break;
+        }
+      }
 
-                    cout << currentRoom->triggers[i]->print << endl;
-                    return(1);
-                  }
-                  else
-                  {
-                    return(0);
-                  }
-                }
-              }
-            }
+      Item * currentItem;
+
+      // Search through items
+      for(int j = 0; j < items.size(); j++)
+      {
+        if(!items[j]->name.compare(itemName))
+        {
+          currentItem = items[j];
+        }
+      }
+
+      // If item is in the correct place
+      if((itemFound && !cond->has.compare("yes") || !itemFound && !cond->has.compare("no") || itemFound && !cond->has.compare("")) && node[i]->active)
+      {
+        if(!cond->status.compare(currentItem->status) || !itemFound)
+        {
+          cout << node[i]->print << endl;
+
+          if(!node[i]->type.compare("single"))
+          {
+            node[i]->active = 0;
           }
 
-          // If not in inventory
-          if(!cond->has.compare("no"))
-          {
-            if(currentRoom->triggers[i]->type.compare("single"))
-            {
-              currentRoom->triggers[i]->active = 0;
-            }
-
-            cout << currentRoom->triggers[i]->print << endl;
-            return(1);
-          }
+          return(1);
         }
       }
     }
@@ -1453,6 +1427,176 @@ int Map::checkTriggers(string command)
 
   return(0);
 }
+
+void Map::checkItems(vector<Item *> node, string command)
+{
+  // Iterate through the items
+  for(int i = 0; i < node.size(); i++)
+  {
+  }
+}
+
+int Map::checkContainers(vector<Container *> node, string command)
+{
+  int returnVal = 0;
+
+  // Iterate through the containers
+  for(int i = 0; i < node.size(); i++)
+  {
+    // Iterate through the containers in the current room
+    for(int j = 0; j < currentRoom->containers.size(); j++)
+    {
+      // Check if the container is in the current room
+      if(currentRoom->containers[j].compare(node[i]->name))
+      {
+        returnVal |= checkTriggers(node[i]->triggers, command);
+      }
+    }
+  }
+
+  return(returnVal);
+}
+
+int Map::checkCreatures(vector<Creature *> node, string command)
+{
+  int returnVal = 0;
+
+  // Iterate through the creatures
+  for(int i = 0; i < node.size(); i++)
+  {
+    // Iterate through the creatures in the current room
+    for(int j = 0; j < currentRoom->creatures.size(); j++)
+    {
+      // Check if the creature is in the current room
+      if(!currentRoom->creatures[j].compare(node[i]->name))
+      {
+        returnVal |= checkTriggers(node[i]->triggers, command);
+      }
+    }
+  }
+
+  return(returnVal);
+}
+
+//// Check single vs permanent TODO
+//int Map::checkTriggers(string command)
+//{
+//  // Look through triggers
+//  for(int i = 0; i < currentRoom->triggers.size(); i++)
+//  {
+//    // If there is no command
+//    if(!currentRoom->triggers[i]->command.compare("") || !currentRoom->triggers[i]->command.compare(command))
+//    {
+//      // Check condition
+//      Condition * cond = currentRoom->triggers[i]->condition;
+//      Item * triggerItem;
+//      string item = cond->object;
+//
+//      // Iterate through items
+//      for(int j = 0; j < items.size(); j++)
+//      {
+//        if(!items[j]->name.compare(item))
+//        {
+//          triggerItem = items[j];
+//          break;
+//        }
+//
+//        // Iterate through containers if it wasn't in items
+//        if(j == items.size() - 1)
+//        {
+//          Container * triggerContainer;
+//
+//          for(int k = 0; k < containers.size(); k++)
+//          {
+//            // It is inside a container
+//            if(!containers[k]->name.compare(item))
+//            {
+//              triggerContainer = containers[k];
+//
+//              // Check if the statuses are the same
+//              if(!cond->status.compare("") || !cond->status.compare(triggerContainer->status))
+//              {
+//                // Check if it is in the inventory
+//                for(int l = 0; l < inventory.size(); l++)
+//                {
+//                  if(!cond->object.compare(inventory[l]))
+//                  {
+//                    for(int m = 0; m < inventory.size(); m++)
+//                    {
+//                      // Found the item in the inventory
+//                      if(currentRoom->triggers[i]->type.compare("single"))
+//                      {
+//                        currentRoom->triggers[i]->active = 0;
+//                      }
+//
+//                      return(0);
+//                    }
+//                  }
+//                }
+//
+//                // It isn't in the inventory
+//                cout << currentRoom->triggers[i]->print << endl;
+//                return(1);
+//              }
+//            }
+//          }
+//        }
+//
+//        // It isn't inside the items or containers (Creatures left)
+//      }
+//
+//
+//      if(!cond->status.compare("") || !cond->status.compare(triggerItem->status))
+//      {
+//        if(cond->owner.compare(""))
+//        {
+//          // Check if it is in the inventory
+//          for(int k = 0; k < inventory.size(); k++)
+//          {
+//            if(!cond->object.compare(inventory[k]))// && !cond->has.compare("yes"))
+//            {
+//              for(int l = 0; l < inventory.size(); l++)
+//              {
+//                if(!inventory[l].compare(item))
+//                {
+//                  if(!cond->has.compare("yes"))
+//                  {
+//                    // Found the item in the inventory
+//                    if(currentRoom->triggers[i]->type.compare("single"))
+//                    {
+//                      currentRoom->triggers[i]->active = 0;
+//                    }
+//
+//                    cout << currentRoom->triggers[i]->print << endl;
+//                    return(1);
+//                  }
+//                  else
+//                  {
+//                    return(0);
+//                  }
+//                }
+//              }
+//            }
+//          }
+//
+//          // If not in inventory
+//          if(!cond->has.compare("no"))
+//          {
+//            if(currentRoom->triggers[i]->type.compare("single"))
+//            {
+//              currentRoom->triggers[i]->active = 0;
+//            }
+//
+//            cout << currentRoom->triggers[i]->print << endl;
+//            return(1);
+//          }
+//        }
+//      }
+//    }
+//  }
+//
+//  return(0);
+//}
 
 void Map::parseMove(string input)
 {
