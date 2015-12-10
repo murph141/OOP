@@ -1141,6 +1141,10 @@ void Map::openExit()
     cout << "Game Over" << endl;
     gameOver = 1;
   }
+  else
+  {
+    cout << "Error" << endl;
+  }
 }
 
 void Map::openContainer(string container)
@@ -1151,7 +1155,7 @@ void Map::openContainer(string container)
     {
       for(int j = 0; j < containers.size(); j++)
       {
-        if(!containers[j]->name.compare(container) && !containers[j]->open)
+        if(!containers[j]->name.compare(container))// && !containers[j]->open)
         {
           containers[j]->open = 1;
 
@@ -1161,7 +1165,7 @@ void Map::openContainer(string container)
             return;
           }
 
-          cout << "Container " << container << " contains ";
+          cout << container << " contains ";
 
           int size = containers[j]->items.size();
 
@@ -1209,6 +1213,8 @@ void Map::readItem(string item)
       }
     }
   }
+
+  cout << "Error" << endl;
 }
 
 void Map::dropItem(string item)
@@ -1253,6 +1259,8 @@ void Map::putItemInContainer(string item, string container)
       }
     }
   }
+
+  cout << "Error" << endl;
 }
 
 void Map::turnOnItem(string item)
@@ -1306,7 +1314,7 @@ void Map::turnOnItem(string item)
     }
   }
 
-  cout << "Item not found" << endl;
+  cout << "Error" << endl;
 }
 
 void Map::attackCreature(string creature, string item)
