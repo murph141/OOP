@@ -1495,6 +1495,7 @@ int Map::checkTriggers(vector<Trigger *> node, string command)
       int index;
       vector<string> searchThrough = currentRoom->containers;
       string searchString = cond->owner;
+
       itemValid = 2;
 
       for(int ii = 0; ii < inventory.size(); ii++)
@@ -1508,6 +1509,13 @@ int Map::checkTriggers(vector<Trigger *> node, string command)
         }
       }
 
+      if(!cond->owner.compare("inventory"))
+      {
+        searchThrough = inventory;
+        searchString = itemName;
+        itemValid = 1;
+      }
+
       // Search for the item
       for(int j = 0; j < searchThrough.size(); j++)
       {
@@ -1518,8 +1526,8 @@ int Map::checkTriggers(vector<Trigger *> node, string command)
         }
       }
 
-      Item * currentItem;
-      Container * currentContainer;
+      Item * currentItem = NULL;
+      Container * currentContainer = NULL;
 
       if(itemValid == 1)
       {
