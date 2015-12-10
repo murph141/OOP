@@ -1031,15 +1031,17 @@ void Map::startGame()
     cout << "> ";
     getline(cin, input);
 
+    int returnValContainers = checkContainers(containers, input);
+
+    int returnValCreatures = checkCreatures(creatures, input);
+
     int returnValTriggers = checkTriggers(currentRoom->triggers, input);
+
+    if(gameOver) break;
 
     if(returnValTriggers && (!input.compare("n") || !input.compare("s") || !input.compare("w") || !input.compare("e"))) continue;
 
     parseMove(input);
-
-    int returnValContainers = checkContainers(containers, input);
-
-    int returnValCreatures = checkCreatures(creatures, input);
 
   } while(!gameOver);
 }
@@ -1151,7 +1153,7 @@ void Map::openContainer(string container)
 {
   for(int i = 0; i < currentRoom->containers.size(); i++)
   {
-    if(currentRoom->containers[i].compare(container))
+    if(!currentRoom->containers[i].compare(container))
     {
       for(int j = 0; j < containers.size(); j++)
       {
@@ -1175,20 +1177,13 @@ void Map::openContainer(string container)
           }
 
           cout << containers[j]->items[size - 1] << endl;
+          return;
         }
-
-        // May add feature later
-
-        //else if(!containers[j]->name.compare(container))
-        //{
-        //  for(int k = 0; k < containers[j]->items.size(); k++)
-        //  {
-        //    cout << containers[j]->items[k] << endl;
-        //  }
-        //}
       }
     }
   }
+
+  cout << "Error" << endl;
 }
 
 void Map::readItem(string item)
@@ -1253,6 +1248,7 @@ void Map::putItemInContainer(string item, string container)
               inventory.erase(inventory.begin() + i);
 
               cout << "Item " << item << " added to " << container << endl;
+              return;
             }
           }
         }
@@ -1335,6 +1331,12 @@ void Map::attackCreature(string creature, string item)
               {
                 if(!creatures[j]->vulnerabilities[l].compare(item))
                 {
+                  if(!creatures[j]->attack)
+                  {
+                    cout << "You assault the " << creature << " with the " << item << endl;
+                    return;
+                  }
+
                   Condition * cond = creatures[j]->attack->condition;
 
                   Item * attackItem;
@@ -1348,105 +1350,32 @@ void Map::attackCreature(string creature, string item)
                     }
                   }
 
+                  if(!cond)
+                  {
+                    cout << creatures[j]->attack->print << endl;
+
+                    for(int n = 0; n < creatures[j]->attack->actions.size(); n++)
+                    {
+                      parseAction(creatures[j]->attack->actions[n]);
+                    }
+
+                    cout << "You assault the " << creature << " with the " << item << endl;
+
+                    return;
+                  }
                   if(!cond->status.compare(attackItem->status) || !cond->status.compare(""))
                   {
                     if(!cond->object.compare(attackItem->name))
                     {
-                      cout << "You assault the " << creature << " with the " << item << endl;
-
                       cout << creatures[j]->attack->print << endl;
 
                       for(int n = 0; n < creatures[j]->attack->actions.size(); n++)
                       {
                         parseAction(creatures[j]->attack->actions[n]);
-                        //string actionToComplete = creatures[j]->attack->actions[n];
-                        //istringstream iss(actionToComplete);
-                        //vector<string> vec;
-
-                        //copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vec));
-
-                        //if(!vec[0].compare("Add") && vec.size() == 4)
-                        //{
-                        //  int type;
-
-                        //  for(int ii = 0; ii < items.size(); ii++)
-                        //  {
-                        //    if(!vec[1].compare(items[ii]->name))
-                        //    {
-                        //      type = 0;
-                        //    }
-                        //  }
-
-                        //  for(int ii = 0; ii < creatures.size(); ii++)
-                        //  {
-                        //    if(!vec[1].compare(creatures[ii]->name))
-                        //    {
-                        //      type = 1;
-                        //    }
-                        //  }
-
-                        //  Room * typeRoom;
-
-                        //  for(int ii = 0; ii < rooms.size(); ii++)
-                        //  {
-                        //    if(!vec[3].compare(rooms[ii]->name))
-                        //    {
-                        //      typeRoom = rooms[ii];
-                        //    }
-                        //  }
-
-                        //  // Add an item
-                        //  if(type == 0)
-                        //  {
-                        //    typeRoom->setItem(vec[1]);
-                        //  }
-                        //  // Add a creature
-                        //  else if(type == 1)
-                        //  {
-                        //    typeRoom->setCreature(vec[1]);
-                        //  }
-                        //}
-                        //else if(!vec[0].compare("Delete") && vec.size() == 2)
-                        //{
-                        //  for(int ii = 0; ii < items.size(); ii++)
-                        //  {
-                        //    if(!vec[1].compare(items[ii]->name))
-                        //    {
-                        //      items.erase(items.begin() + ii);
-                        //    }
-                        //  }
-
-                        //  for(int ii = 0; ii < creatures.size(); ii++)
-                        //  {
-                        //    if(!vec[1].compare(creatures[ii]->name))
-                        //    {
-                        //      creatures.erase(creatures.begin() + ii);
-                        //      break;
-                        //    }
-                        //  }
-                        //}
-                        //else if(!actionToComplete.compare("Game Over"))
-                        //{
-                        //  cout << "Game Over" << endl;
-                        //  gameOver = 1;
-                        //}
-                        //else if(!vec[0].compare("Update"))
-                        //{
-                        //  for(int ii = 0; ii < items.size(); ii++)
-                        //  {
-                        //    if(!vec[1].compare(items[ii]->name))
-                        //    {
-                        //      items[ii]->status = vec[3];
-                        //    }
-                        //  }
-                        //}
-                        //else
-                        //{
-                        //  parseMove(actionToComplete);
-                        //}
                       }
 
-                      // execute attack elements
+                      cout << "You assault the " << creature << " with the " << item << endl;
+
                       return;
                     }
                   }
@@ -1592,6 +1521,7 @@ int Map::checkTriggers(vector<Trigger *> node, string command)
 
         itemFound = 0;
 
+        if(!currentContainer) return(1);
         for(int j = 0; j < currentContainer->items.size(); j++)
         {
           if(!currentContainer->items[j].compare(itemName))
